@@ -5,15 +5,16 @@ import sqlalchemy
 class DatabaseConnector:
 
     def read_db_creds(self):
+        """Reads and returns credentials from db_creds.yaml file"""
         with open('db_creds.yaml', 'r') as file:
             data = yaml.safe_load(file)
             return data
 
-    # Establish connection and return engine object
     def init_db_engine(self):
+        """Establish URL and return engine object"""
         # Load credentials from YAML file
-        db_obj = DatabaseConnector()
-        credentials = db_obj.read_db_creds()
+        connector_obj = DatabaseConnector()
+        credentials = connector_obj.read_db_creds()
         
         # Establish the URL to create the engine object
         url_object = sqlalchemy.URL.create(
@@ -28,11 +29,11 @@ class DatabaseConnector:
         engine = sqlalchemy.create_engine(url_object)
         return engine
 
-    # Return table list from database
     def list_db_tables(self):
+        """Return list of tables of database"""
         # Get engine object
-        db_obj = DatabaseConnector()
-        engine = db_obj.init_db_engine()
+        connector_obj = DatabaseConnector()
+        engine = connector_obj.init_db_engine()
         
         # Get table names using inspect
         inspector = sqlalchemy.inspect(engine)
@@ -40,6 +41,10 @@ class DatabaseConnector:
         return table_names
 
     def upload_to_db(self, dataframe, table_name):
+        """Upload dataframe to database
+        Keyword arguments:
+        dataframe -- dataframe to send to database
+        table_name -- name assigned for the table"""
         self.dataframe = dataframe
         self.table_name = table_name
         
