@@ -32,13 +32,14 @@ This repository houses the code and resources necessary for extracting, cleaning
 ## File Structure
 
 [Multinational Retail Data Centralisation]
-├── [main.py]
-├── [data_handling]
-│   ├── [__init__.py]
-│   ├── [data_cleaning.py]
-│   ├── [data_extraction.py]
-│   └── [database_utils.py]
-└── [README.md]
+
+- [main.py]
+- [data_handling]
+   - [__init__.py]
+   - [data_cleaning.py]
+   - [data_extraction.py]
+   - [database_utils.py]
+- [README.md]
 
 ### Class DataCleaning (data_cleaning.py)
 This class contains methods to clean data from each of the data sources.
@@ -47,4 +48,4 @@ This class contains methods to clean data from each of the data sources.
 This class will work as a utility class, containing methods that help extract data from different data sources.
 
 ### Class DatabaseConnector (database_utils.py)
-This class will connect with and upload data to the database.
+This class will connect with and upload data to databases.
