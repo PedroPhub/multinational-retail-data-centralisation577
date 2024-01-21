@@ -74,7 +74,9 @@ class DataCleaning:
         cards_df['date_payment_confirmed'] = pd.to_datetime(cards_df['date_payment_confirmed'], errors='coerce')
 
         # Clean '?' from card numbers
-        cards_df["card_number"] = cards_df["card_number"].str.replace('?','')
+        cards_df['card_number'] = cards_df['card_number'].astype(str)
+        cards_df['card_number'] = cards_df['card_number'].str.replace('?','')
+        print(cards_df)
 
         # Send to database
         connector_obj = DatabaseConnector()

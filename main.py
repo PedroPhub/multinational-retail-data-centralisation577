@@ -60,17 +60,17 @@ connector_obj = DatabaseConnector()
 
 # Task 8
 # Download JSON
-with open('user_cred.yaml', 'r') as file: # Load from file for privacy
-            data = yaml.safe_load(file)
-key = data['key']
-secret = data['secret']
+# with open('user_cred.yaml', 'r') as file: # Load from file for privacy
+#             data = yaml.safe_load(file)
+# key = data['key']
+# secret = data['secret']
 
-sales_df = pd.read_json('https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json', storage_options={'key':key, 'secret':secret})
+# sales_df = pd.read_json('https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json', storage_options={'key':key, 'secret':secret})
 
 # Clean NULL and gibberish by length of month values
-sales_df = sales_df[sales_df['month'].str.len()<=2] # Values longer than 2 characters will be deleted from dataframe
+# sales_df = sales_df[sales_df['month'].str.len()<=2] # Values longer than 2 characters will be deleted from dataframe
 # Upload dataframe to database
-connector_obj.upload_to_db(sales_df, 'dim_date_times')
+# connector_obj.upload_to_db(sales_df, 'dim_date_times')
 
 
 
