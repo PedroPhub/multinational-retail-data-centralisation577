@@ -39,6 +39,16 @@ This repository houses the code and resources necessary for extracting, cleaning
    - [data_cleaning.py]
    - [data_extraction.py]
    - [database_utils.py]
+- [SQL_database_schema]
+   - [Milestone3_Task1]
+   - [Milestone3_Task2]
+   - [Milestone3_Task3]
+   - [Milestone3_Task4]
+   - [Milestone3_Task5]
+   - [Milestone3_Task6]
+   - [Milestone3_Task7]
+   - [Milestone3_Task8] 
+   - [Milestone3_Task9]  
 - [README.md]
 
 ### Class DataCleaning (data_cleaning.py)
