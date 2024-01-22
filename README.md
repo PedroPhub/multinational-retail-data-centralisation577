@@ -59,3 +59,6 @@ This class will work as a utility class, containing methods that help extract da
 
 ### Class DatabaseConnector (database_utils.py)
 This class will connect with and upload data to databases.
+
+### SQL_database_schema folder
+Contains SQL statements that establishes a star-based schema of the database, ensuring that the columns are of the correct data types. 
