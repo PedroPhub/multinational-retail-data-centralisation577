@@ -39,6 +39,16 @@ This repository houses the code and resources necessary for extracting, cleaning
    - [data_cleaning.py]
    - [data_extraction.py]
    - [database_utils.py]
+- [SQL_database_schema]
+   - [Milestone3_Task1]
+   - [Milestone3_Task2]
+   - [Milestone3_Task3]
+   - [Milestone3_Task4]
+   - [Milestone3_Task5]
+   - [Milestone3_Task6]
+   - [Milestone3_Task7]
+   - [Milestone3_Task8] 
+   - [Milestone3_Task9]  
 - [README.md]
 
 ### Class DataCleaning (data_cleaning.py)
@@ -49,3 +59,6 @@ This class will work as a utility class, containing methods that help extract da
 
 ### Class DatabaseConnector (database_utils.py)
 This class will connect with and upload data to databases.
+
+### SQL_database_schema folder
+Contains SQL statements that establishes a star-based schema of the database, ensuring that the columns are of the correct data types. 
