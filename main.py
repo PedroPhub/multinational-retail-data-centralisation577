@@ -1,76 +1,123 @@
 import pandas as pd
 import yaml
-
 from data_handling.database_utils import DatabaseConnector
 from data_handling.data_cleaning import DataCleaning
 from data_handling.data_extraction import DataExtractor
 
 
-extractor_obj = DataExtractor()
-cleaning_obj = DataCleaning()
-connector_obj = DatabaseConnector()
+def read_yaml_data(filename: str) -> dict[str, str]:
+    with open(filename, 'r') as file:
+        yaml_data = yaml.safe_load(file)
+    return yaml_data
 
-# MILESTONE 2
-# Task 3, Step 2 - Read the credentials
-# credentials = connector_obj.read_db_creds()
+def clean_user() -> None:
+    # Read the credentials
+    rds_connector = DatabaseConnector(filename='db_creds.yaml')
+    engine = rds_connector.init_db_engine()
 
-# Task 3, Step 3 - Read the credentials
-# engine = connector_obj.init_db_engine() # read_db_creds() is performed inside this method
+    # Extract RDS table to dataframe
+    rds_extractor = DataExtractor(engine=engine, table_name='legacy_users')
+    users_df = rds_extractor.read_rds_table()
 
-# Task 3, Step 4 - List all the tables in the database
-# tables_list = connector_obj.list_db_tables()
-# print(tables_list)
+    # Perform the cleaning of the user data
+    clean_users_obj = DataCleaning(users_df)
+    clean_user_df = clean_users_obj.clean_user_data()
+    print(clean_user_df)
+    # Upload of dataframe
+    postgres_conn_users = DatabaseConnector(filename='postgres_link.yaml', dataframe=clean_user_df, table_name='dim_users')
+    postgres_conn_users.upload_to_db()
 
-# Task 3, Step 5 - Extract RDS table to dataframe
-# engine = connector_obj.init_db_engine()
-# rds_df = extractor_obj.read_rds_table(engine, 'legacy_users')
-# print(rds_df)
+def clean_card() -> None:
+    # Extract PDF pages from document
+    urls = read_yaml_data('links.yaml')
+    pdf_extractor = DataExtractor()
+    card_df = pdf_extractor.retrieve_pdf_data(urls['s3_pdf_url'])
 
-# Task 3, Step 6-8 - Perform the cleaning of the user data and upload user data to database
-# cleaning_obj.clean_user_data() # upload_to_db method called inside this method
+    # Perform the cleaning of the card data
+    clean_card_obj = DataCleaning(card_df)
+    clean_card_df = clean_card_obj.clean_card_data()
 
-# Task 4, Step 2 - Extract PDF pages from document
-# card_df = extractor_obj.retrieve_pdf_data('https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf')
-# print(card_df)
+    # Send to database
+    postgres_conn_cards = DatabaseConnector(filename='postgres_link.yaml', dataframe=clean_card_df, table_name='dim_card_details')
+    postgres_conn_cards.upload_to_db()
 
-# Task 4, Step 3 and 4 - Clean the card data and upload card data to database
-# cleaning_obj.clean_card_data() # retrieve_pdf_data and upload_to_db methods called inside this method
+def clean_stores() -> None:
+    # Return the number of stores to extract
+    api_data = read_yaml_data('API.yaml')
+    api_header = {'x-api-key': api_data['api_key']}
 
-# Task 5, Step 1 - Return the number of stores to extract
-# header = {'x-api-key': 'yFBQbwXe9J3sd6zWVAMrK6lcxxr0q1lr2PT6DDMX'} # API Key
-# store_number = extractor_obj.list_number_of_stores('https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores', header)
-# print(store_number['number_stores'])
+    list_stores_obj = DataExtractor(header=api_header)
+    number_of_stores = list_stores_obj.list_number_of_stores(endpoint=api_data['number_stores_url'])
 
-# Task 5, Step 3, 4 and 5 - Retrieve stores data using an API. Clean the data and send to database
-# cleaning_obj.clean_store_data() # All methods required are called inside this method
+    # Create empty store DataFrame and collect data from retrieve_stores_data() for each store number
+    store_data_df = pd.DataFrame()
+    store_data_obj = DataExtractor(header=api_header)
+    for store in range(number_of_stores['number_stores']):
+        store_data = store_data_obj.retrieve_stores_data(endpoint=api_data['store_data'].format(store))
+        store_data_df = pd.concat([store_data_df, pd.DataFrame([store_data])],ignore_index=True)
 
-# Task 6, Step 1-4
-# object = extractor_obj.extract_from_s3('s3://data-handling-public/products.csv') # Extract data
-# kg_df = cleaning_obj.convert_product_weights(object) # Convert all weights to kg (1 decimal) 
-# clean_df = cleaning_obj.clean_products_data(kg_df) # Clean remaining dataframe
-# connector_obj.upload_to_db(clean_df,'dim_products') # Send to database
+    # Perform the cleaning of the stores data
+    clean_stores_obj = DataCleaning(dataframe=store_data_df)
+    clean_stores_df = clean_stores_obj.clean_store_data()
 
-# Task 7, Step 1
-# tables_list = connector_obj.list_db_tables()
-# print(tables_list)
+    # Send to database
+    postgres_conn_stores = DatabaseConnector(filename='postgres_link.yaml', dataframe=clean_stores_df, table_name='dim_store_details')
+    postgres_conn_stores.upload_to_db()
 
-# Task 7, Step 2,3 and 4
-# orders_df = cleaning_obj.clean_orders_data() # read_db_table method is called inside this method
-# connector_obj.upload_to_db(orders_df,'orders_table') # Send to database
+def clean_products() -> None:
+    # Extract data
+    urls = read_yaml_data('links.yaml')
+    product_data_extractor = DataExtractor()
+    products_df = product_data_extractor.extract_from_s3(urls['s3_products_url']) 
+    
+    # Convert all weights to kg (1 decimal) and clean data
+    product_data_cleaner = DataCleaning(products_df)
+    products_df = product_data_cleaner.convert_product_weights()  
+    clean_products_df = product_data_cleaner.clean_products_data(products_df) 
+    
+    # Upload of dataframe
+    postgres_conn_products = DatabaseConnector(filename='postgres_link.yaml', dataframe=clean_products_df, table_name='dim_products')
+    postgres_conn_products.upload_to_db()
 
-# Task 8
-# Download JSON
-# with open('user_cred.yaml', 'r') as file: # Load from file for privacy
-#             data = yaml.safe_load(file)
-# key = data['key']
-# secret = data['secret']
+def clean_orders() -> None:
+    # Read the credentials
+    rds_connector = DatabaseConnector(filename='db_creds.yaml')
+    engine = rds_connector.init_db_engine()
 
-# sales_df = pd.read_json('https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json', storage_options={'key':key, 'secret':secret})
+    # Extract RDS table to dataframe
+    rds_extractor = DataExtractor(engine=engine, table_name='orders_table')
+    orders_df = rds_extractor.read_rds_table()
 
-# Clean NULL and gibberish by length of month values
-# sales_df = sales_df[sales_df['month'].str.len()<=2] # Values longer than 2 characters will be deleted from dataframe
-# Upload dataframe to database
-# connector_obj.upload_to_db(sales_df, 'dim_date_times')
+    # Perform the cleaning of the orders data
+    orders_data_cleaner = DataCleaning(orders_df)
+    orders_df = orders_data_cleaner.clean_orders_data()
+
+    # Upload of dataframe
+    postgres_conn_products = DatabaseConnector(filename='postgres_link.yaml', dataframe=orders_df, table_name='orders_table')
+    postgres_conn_products.upload_to_db()
+
+def clean_date_events() -> None:
+    # Download JSON
+    data = read_yaml_data('user_cred.yaml')
+    key = data['key']
+    secret = data['secret']
+    urls = read_yaml_data('links.yaml')
+    json_url = urls['date_events_url']
+    sales_df = pd.read_json(json_url, storage_options={'key':key, 'secret':secret})
+
+    # Clean NULL and gibberish by length of month values
+    sales_df = sales_df[sales_df['month'].str.len()<=2] # Values longer than 2 characters will be deleted from dataframe
+    # Upload dataframe to database
+    postgres_conn_events = DatabaseConnector(filename='postgres_link.yaml', dataframe=sales_df, table_name='dim_date_times')
+    postgres_conn_events.upload_to_db()
 
 
 
+if __name__ == '__main__':
+    # clean_user()
+    # clean_card()
+    # clean_stores()
+    # clean_products()
+    # clean_orders()
+    # clean_date_events()
+    pass
